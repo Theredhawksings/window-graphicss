@@ -1,285 +1,124 @@
+#define MAX_LEN 100
+#define MAX_LINES 100
 #define _CRT_SECURE_NO_WARNINGS
 
-#include<stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <string.h>
+#include <windows.h>
 
+enum ColorType { WHITE = 15, GRAY = 8, BLUE = 9, GREEN = 10 } COLOR;
 char ch;
-int count = 1;
+
+bool ccc = true;
+bool ddd = true;
 
 int main() {
-	srand(time(NULL));
+    char data[MAX_LINES][MAX_LEN];  // 2차원 배열 선언
+    int lineIndex = 0;
 
-	int a[5][5];//행렬 1
-	int b[5][5];//행렬 2
-	int c[5][5];//행렬 3
-	int d[5][5];//행렬 3
+    FILE* fs = fopen("data.txt", "r");
 
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			a[i][j] = rand() % 2;
-			b[i][j] = rand() % 2;
-		}
-	}
+    int ch;
+    int colIndex = 0;
 
-	for (int i = 0; i < 2; i++) {
+    while ((ch = fgetc(fs)) != EOF && lineIndex < MAX_LINES) {
+        if (ch == '\n') {
+            data[lineIndex][colIndex] = '\0';
+            lineIndex++;
+            colIndex = 0;
+        }
+        else if (colIndex < MAX_LEN - 1) {
+            data[lineIndex][colIndex] = ch;
+            colIndex++;
+        }
+    }
 
-		a[rand() % 4][rand() % 4] = 2;
-		b[rand() % 4][rand() % 4] = 2;
-	}
+    if (colIndex > 0 && lineIndex < MAX_LINES) {
+        data[lineIndex][colIndex] = '\0';
+        lineIndex++;
+    }
 
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			printf("%d ", a[i][j]);
-		}
-		printf("\n");
-	}
+    fclose(fs);
 
-	printf("\n");
+    for (int i = 0; i < lineIndex; i++) {
+        for (int j = 0; data[i][j] != '\0'; j++) {
+            printf("%c", data[i][j]);
+        }
+        printf("\n");
+    }
 
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			printf("%d ", b[i][j]);
-		}
-		printf("\n");
-	}
+    while (1) {
+        ch = getchar();
 
-	printf("\n");
+        if (ch == 'c') {
+            if (ccc == true) {
 
-	while (1) {
-		scanf("%c", &ch);
+                int upperCaseWordCount = 0;
+                int inWord = 0;
+                int colorizeWord = 0;
 
-		if (ch == 'm') {
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					c[i][j] = 0;
+                for (int i = 0; i < lineIndex; i++) {
+                    for (int j = 0; data[i][j] != '\0'; j++) {
 
-					for (int k = 0; k < 4; k++) {
-						c[i][j] += a[i][k] * b[k][j];
-					}
-				}
-			}
+                        if (!inWord && data[i][j] >= 'A' && data[i][j] <= 'Z' && (j == 0 || data[i][j - 1] == ' ')) {
+                            upperCaseWordCount++;
+                            colorizeWord = 1;
+                            inWord = 1;
+                        }
+                        else if (data[i][j] == ' ') {
+                            inWord = 0;
+                            colorizeWord = 0;
+                        }
 
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					printf("%d ", c[i][j]);
-				}
-				printf("\n");
-			}
+                        if (colorizeWord) {
+                            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BLUE);
+                        }
+                        else {
+                            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), WHITE);
+                        }
 
-		}
+                        printf("%c", data[i][j]);
+                    }
+                    printf("\n"); // Print newline after each line
+                    inWord = 0; // 새 줄에서는 단어를 벗어난 상태로 초기화
+                    colorizeWord = 0; // 새 줄에서는 색칠 상태 초기화
+                }
+                printf("\n%d\n", upperCaseWordCount);
+            }
+            if (ccc == false) {
+                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), WHITE);
+                for (int i = 0; i < lineIndex; i++) {
+                    for (int j = 0; data[i][j] != '\0'; j++) {
+                        printf("%c", data[i][j]);
+                    }
+                    printf("\n");
+                }
+            }
+            ccc = !ccc;
+        }
 
-		if (ch == 'a') {
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					printf("%d ", a[i][j] + b[i][j]);
-				}
-				printf("\n");
-			}
-		}
+        if (ch == 'd') {
+            if (ddd == true) {
+                for (int i = 0; i < lineIndex; i++) {
+                    for (int j = strlen(data[i]) - 1; j >= 0; j--) {
+                        printf("%c", data[i][j]);
+                    }
+                    printf("\n");
+                }
+            }
+            else if (ddd == false) {
+                for (int i = 0; i < lineIndex; i++) {
+                    for (int j = 0; data[i][j] != '\0'; j++) {
+                        printf("%c", data[i][j]);
+                    }
+                    printf("\n");
+                }
+            }
+            ddd = !ddd;
+        }
 
-		if (ch == 'd') {
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					printf("%d ", a[i][j] - b[i][j]);
-				}
-				printf("\n");
-			}
-		}
+    }
 
-		if (ch == 'r') {
-			int s1 = a[0][0] * (a[1][1] * (a[2][2] * a[3][3] - a[3][2] * a[2][3]) - a[1][2] * (a[2][1] * a[3][3] - a[2][3] * a[3][1]) + a[1][3] * (a[2][1] * a[3][2] - a[2][2] * a[3][1]));
-			int s2 = a[0][1] * (a[1][0] * (a[2][2] * a[3][3] - a[3][2] * a[2][3]) - a[1][2] * (a[2][0] * a[3][3] - a[2][3] * a[3][0]) + a[1][3] * (a[2][0] * a[3][2] - a[2][2] * a[3][0]));
-			int s3 = a[0][2] * (a[1][0] * (a[2][1] * a[3][3] - a[3][1] * a[2][3]) - a[1][1] * (a[2][0] * a[3][3] - a[2][3] * a[3][0]) + a[1][3] * (a[2][0] * a[3][1] - a[2][1] * a[3][0]));
-			int s4 = a[0][3] * (a[1][0] * (a[2][1] * a[3][2] - a[3][1] * a[2][2]) - a[1][1] * (a[2][0] * a[3][2] - a[2][2] * a[3][0]) + a[1][2] * (a[2][0] * a[3][1] - a[2][1] * a[3][0]));
-			int d = s1 - s2 + s3 - s4;
-			printf("%d\n", d);
-
-			s1 = b[0][0] * (b[1][1] * (b[2][2] * b[3][3] - b[3][2] * b[2][3]) - b[1][2] * (b[2][1] * b[3][3] - b[2][3] * b[3][1]) + b[1][3] * (b[2][1] * b[3][2] - b[2][2] * b[3][1]));
-			s2 = b[0][1] * (b[1][0] * (b[2][2] * b[3][3] - b[3][2] * b[2][3]) - b[1][2] * (b[2][0] * b[3][3] - b[2][3] * b[3][0]) + b[1][3] * (b[2][0] * b[3][2] - b[2][2] * b[3][0]));
-			s3 = b[0][2] * (b[1][0] * (b[2][1] * b[3][3] - b[3][1] * b[2][3]) - b[1][1] * (b[2][0] * b[3][3] - b[2][3] * b[3][0]) + b[1][3] * (b[2][0] * b[3][1] - b[2][1] * b[3][0]));
-			s4 = b[0][3] * (b[1][0] * (b[2][1] * b[3][2] - b[3][1] * b[2][2]) - b[1][1] * (b[2][0] * b[3][2] - b[2][2] * b[3][0]) + b[1][2] * (b[2][0] * b[3][1] - b[2][1] * b[3][0]));
-			d = s1 - s2 + s3 - s4;
-			printf("%d\n", d);
-		}
-
-		if (ch == 't') {
-
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					c[i][j] = a[j][i];
-				}
-			}
-
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					d[i][j] = b[j][i];
-				}
-			}
-
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					printf("%d ", c[i][j]);
-				}
-				printf("\n");
-			}
-
-			printf("\n");
-
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					printf("%d ", d[i][j]);
-				}
-				printf("\n");
-			}
-		}
-
-		if (ch == 'e') {
-
-			if (count == 1) {
-				for (int i = 0; i < 4; i++) {
-					for (int j = 0; j < 4; j++) {
-						if (a[i][j] % 2 == 0) {
-							printf("%d ", a[i][j]);
-						}
-						else {
-							printf("  ");
-						}
-					}
-					printf("\n");
-				}
-
-				printf("\n");
-
-				for (int i = 0; i < 4; i++) {
-					for (int j = 0; j < 4; j++) {
-						if (b[i][j] % 2 == 0) {
-							printf("%d ", b[i][j]);
-						}
-						else {
-							printf("  ");
-						}
-					}
-					printf("\n");
-				}
-
-				printf("\n");
-			}
-
-			if (count == 2) {
-				for (int i = 0; i < 4; i++) {
-					for (int j = 0; j < 4; j++) {
-						if (a[i][j] == 1) {
-							printf("%d ", a[i][j]);
-						}
-						else {
-							printf("  ");
-						}
-					}
-					printf("\n");
-				}
-
-				printf("\n");
-
-				for (int i = 0; i < 4; i++) {
-					for (int j = 0; j < 4; j++) {
-						if (b[i][j]==1) {
-							printf("%d ", b[i][j]);
-						}
-						else {
-							printf("  ");
-						}
-					}
-					printf("\n");
-				}
-
-				printf("\n");
-			}
-
-			if (count == 3) {
-				for (int i = 0; i < 4; i++) {
-					for (int j = 0; j < 4; j++) {
-						printf("%d ", a[i][j]);
-					}
-					printf("\n");
-				}
-
-				printf("\n");
-
-				for (int i = 0; i < 4; i++) {
-					for (int j = 0; j < 4; j++) {
-						printf("%d ", b[i][j]);
-					}
-					printf("\n");
-				}
-
-				printf("\n");
-			}
-
-			count++;
-			if (count > 3) {
-				count = 1;
-			}
-		}
-
-		if (ch == 's') {
-
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					a[i][j] = rand() % 2;
-					b[i][j] = rand() % 2;
-				}
-			}
-
-			for (int i = 0; i < 2; i++) {
-
-				a[rand() % 4][rand() % 4] = 2;
-				b[rand() % 4][rand() % 4] = 2;
-			}
-
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					printf("%d ", a[i][j]);
-				}
-				printf("\n");
-			}
-
-			printf("\n");
-
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					printf("%d ", b[i][j]);
-				}
-				printf("\n");
-			}
-
-			printf("\n");
-
-			
-			
-		}
-
-		if (ch>=48 && ch<=57) {
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					printf("%d ", a[i][j]*((int)ch-48));
-				}
-				printf("\n");
-			}
-
-			printf("\n");
-
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					printf("%d ", b[i][j]* ((int)ch - 48));
-				}
-				printf("\n");
-			}
-
-			printf("\n");
-		}
-
-	}
-
-	return 0;
+    return 0;
 }
