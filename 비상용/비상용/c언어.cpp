@@ -12,6 +12,10 @@ char ch;
 
 bool ccc = true;
 bool ddd = true;
+bool eee = true;
+bool fff = true;
+bool ggg = true;
+
 
 int main() {
     char data[MAX_LINES][MAX_LEN];  // 2차원 배열 선언
@@ -118,6 +122,108 @@ int main() {
             ddd = !ddd;
         }
 
+        if (ch == 'e') {
+            if (eee == true) {
+                for (int i = 0; i < lineIndex; i++) {
+                    for (int j = 0; data[i][j] != '\0'; j++) {
+                        if (j % 3 == 0 && j > 0) {
+                            printf("@@");
+                        }
+                        printf("%c", data[i][j]);
+                    }
+                    printf("\n");
+                }
+
+
+
+            }
+            else {
+                for (int i = 0; i < lineIndex; i++) {
+                    for (int j = 0; data[i][j] != '\0'; j++) {
+                        printf("%c", data[i][j]);
+                    }
+                    printf("\n");
+                }
+            }
+            eee = !eee;
+        }
+
+        if (ch == 'f') {
+       
+            if (fff) {
+                for (int i = 0; i < lineIndex; i++) {
+                    int len = strlen(data[i]);
+                    int wordStart = 0;
+
+                    for (int j = 0; j <= len; j++) {
+                        if (data[i][j] == ' ') {
+                            for (int k = j - 1; k >= wordStart; k--) {
+                                printf("%c", data[i][k]);
+                            }
+                            if (data[i][j] == ' ') {
+                                printf(" ");
+                            }
+                            wordStart = j + 1;
+                        }
+                    }
+                    printf("\n");
+                }
+            }
+
+            else if (!fff) {
+                for (int i = 0; i < lineIndex; i++) {
+                    for (int j = 0; data[i][j] != '\0'; j++) {
+                        printf("%c", data[i][j]);
+                    }
+                    printf("\n");
+                }
+            }
+
+            fff = !fff;
+        }
+
+        if (ch == 'g') {
+            if (ggg) {
+                char ch1, ch2;
+
+                scanf(" %c", &ch1); 
+                scanf(" %c", &ch2);  
+
+                for (int i = 0; i < lineIndex; i++) {
+                    for (int j = 0; data[i][j] != '\0'; j++) {
+                        if (data[i][j] == ch1) {
+                            printf("%c", ch2);
+                        }
+                        else printf("%c", data[i][j]);
+                    }
+                    printf("\n");
+                }
+            }
+
+            else if (!ggg) {
+                for (int i = 0; i < lineIndex; i++) {
+                    for (int j = 0; data[i][j] != '\0'; j++) {
+                        printf("%c", data[i][j]);
+                    }
+                    printf("\n");
+                }
+            }
+
+            ggg = !ggg;
+        }
+
+        if (ch == 'h') {
+            for (int i = 0; i < lineIndex; i++) {
+                int count = 0;
+                for (int j = 0; data[i][j] != '\0'; j++) {
+                    if (data[i][j] == ' ') {
+                        count++;
+                    }
+                    printf("%c", data[i][j]);
+                }
+                printf("  %d \n",count+1);
+            }
+        }
     }
 
     return 0;
