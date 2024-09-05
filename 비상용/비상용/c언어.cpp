@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include <cstring>
 
 enum ColorType { WHITE = 15, GRAY = 8, BLUE = 9, GREEN = 10 } COLOR;
 char ch;
@@ -16,7 +17,7 @@ bool eee = true;
 bool fff = true;
 bool ggg = true;
 
-
+int rrr = 0;
 int main() {
     char data[MAX_LINES][MAX_LEN];  // 2차원 배열 선언
     int lineIndex = 0;
@@ -54,6 +55,7 @@ int main() {
 
     while (1) {
         ch = getchar();
+        printf("\n");
 
         if (ch == 'c') {
             if (ccc == true) {
@@ -224,7 +226,100 @@ int main() {
                 printf("  %d \n",count+1);
             }
         }
+
+        if (ch == 'r') {
+            int a[11] = {};
+
+            for (int i = 0; i < lineIndex; i++) {
+                int count = 0;
+                for (int j = 0; data[i][j] != '\0'; j++) {
+                    if (data[i][j] == ' ') {
+                        count++;
+                    }
+                }
+                a[i] = count;
+            }
+
+            if (rrr == 0) {
+                for (int i = 0; i < 100; i++) {
+                    for (int j = 0; j < lineIndex; j++) {
+                        if (a[j] == i) {
+                            for (int k = 0; data[j][k] != '\0'; k++) {
+                                printf("%c", data[j][k]);
+                            }
+                            printf("\n");
+                        }
+                    }
+                }
+            }
+
+            if (rrr == 1) {
+                for (int i = 100; i >=0 ; i--) {
+                    for (int j = 0; j < lineIndex; j++) {
+                        if (a[j] == i) {
+                            for (int k = 0; data[j][k] != '\0'; k++) {
+                                printf("%c", data[j][k]);
+                            }
+                            printf("\n");
+                        }
+                    }
+                }
+            }
+
+            if (rrr == 2) {
+                for (int i = 0; i < lineIndex; i++) {
+                    for (int j = 0; data[i][j] != '\0'; j++) {
+                        printf("%c", data[i][j]);
+                    }
+                    printf("\n");
+                }
+            }
+
+            rrr++;
+
+            if (rrr == 3) {
+                rrr = 0;
+            }
+        }
+
+        if (ch == 's') {
+            char targetWord[MAX_LEN];
+            int count = 0;  
+            int len = 0;
+
+            printf("찾을 단어를 입력하세요: ");
+            scanf("%s", targetWord);
+
+            len = strlen(targetWord);
+
+            for (int i = 0; i < lineIndex; i++) {
+                for (int j = 0; data[i][j] != '\0'; j++) {
+
+                    if (_strnicmp(&data[i][j], targetWord, len) == 0) {
+
+                        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), GREEN);
+                        for (int k = 0; k < len; k++) {
+                            printf("%c", data[i][j + k]);
+                        }
+
+                        count++;
+                        j += len - 1; 
+                    }
+                    else {
+                        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), WHITE);
+                        printf("%c", data[i][j]);
+                    }
+                }
+                printf("\n");
+            }
+
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), WHITE);
+            printf("%d번.\n", count);
+        }
+
     }
+
+
 
     return 0;
 }
