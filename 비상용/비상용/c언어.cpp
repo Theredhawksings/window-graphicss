@@ -109,14 +109,14 @@ int main() {
     points.push_front({ 1, 1, 0 });
     points.push_front({ 1, 0, 0 });
     points.push_front({ 1, 1, 1 });
-    print_points(points);
 
 
     while (1) {
-        
+        cout << endl << endl;
+        print_points(points);
         cout << "명령어 입력     " << endl << endl;
         cin >> command;
-
+       
         
 
         if (command == "+") {
