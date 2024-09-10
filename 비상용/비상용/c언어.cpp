@@ -1,172 +1,234 @@
-#include <iostream>
-#include <deque> 
-#include <algorithm> 
-using namespace std;
-struct Point {
-    int x;
-    int y;
-    int z;
-};
-bool as = true;
-void add_point(deque<Point>& points, int x, int y, int z) {
-    points.push_front({ x, y, z });
-}
-void remove_point_front(deque<Point>& points) {
-    if (!points.empty()) {
-        points.pop_front();
-    }
-    else {
-        cout << "리스트가 비어 있습니다.\n";
-    }
-}
-void add_point_end(deque<Point>& points, int x, int y, int z) {
-    points.push_back({ x, y, z }); 
-}
-void print_points(const deque<Point>& points) {
-    for (const auto& point : points) {
-        cout << point.x << ", " << point.y << ", " << point.z << endl;
-    }
-}
-void remove_point_end(deque<Point>& points) {
-    if (!points.empty()) {
-        points.pop_back();
-    }
-    else {
-        cout << "리스트가 비어 있습니다.\n";
-    }
-}
-void print_size(deque<Point>& points) {
-    cout << points.size() << endl;
-}
-void remove_all_point(deque<Point>& points) {
-    while (!points.empty()) {
-        points.pop_front();
-    }
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+#include <windows.h>
+
+void setColor(int color) {
+
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, color);
+
 }
 
-void print_farthest_point(deque<Point>& points) {
+void printBoard(char board[5][5], int revealed[5][5]) {
 
-    Point* farthestPoint = &points[0];
-    int max = points[0].x * points[0].x + points[0].y * points[0].y + points[0].z * points[0].z;
+    printf("  a b c d e\n");
 
-    for (Point& p : points) {
-        int dis = p.x * p.x + p.y * p.y + p.z * p.z;
-        if (dis > max) {
-            max = dis;
-            farthestPoint = &p;
+    for (int i = 0; i < 5; i++) {
+        printf("%d ", i + 1);
+        for (int j = 0; j < 5; j++) {
+            if (revealed[i][j] != 0) {
+                int color = 7;
+                if (revealed[i][j] == 1) {
+                    color = 12;
+                }
+                else if (revealed[i][j] == 2) {
+                    color = 9;
+                }
+                setColor(color);
+                printf("%c ", board[i][j]);
+                setColor(7);
+            }
+            else {
+                printf("* ");
+            }
+        }
+        printf("\n");
+    }
+
+}
+
+void shuffleBoard(char board[5][5]) {
+    char characters[] = "@aabbccddeeffgghhiijjkkll";
+
+    int length = 25;
+    srand(time(0));
+
+    for (int i = 0; i < length; i++) {
+        int randomIndex = rand() % length;
+        char temp = characters[i];
+        characters[i] = characters[randomIndex];
+        characters[randomIndex] = temp;
+    }
+
+    int index = 0;
+
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            board[i][j] = characters[index];
+            index++;
         }
     }
 
-    cout << farthestPoint->x << ", " << farthestPoint->y << ", " << farthestPoint->z << endl;
 }
 
-void print_closest_point(deque<Point>& points) {
+void revealAllSameLetters(char board[5][5], int revealed[5][5], char letter, int currentPlayer) {
 
-    Point* closestPoint = &points[0];
-    int min= points[0].x * points[0].x + points[0].y * points[0].y + points[0].z * points[0].z;
-
-    for (Point& p : points) {
-        int dis = p.x * p.x + p.y * p.y + p.z * p.z;
-        if (dis < min) {
-            min = dis;
-            closestPoint = &p;
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            if (board[i][j] == letter) {
+                if (currentPlayer == 1) {
+                    revealed[i][j] = 1;
+                }
+                else if (currentPlayer == 2) {
+                    revealed[i][j] = 2;
+                }
+            }
         }
     }
 
-    cout << closestPoint->x << ", " << closestPoint->y << ", " << closestPoint->z << endl;
 }
 
-bool compareAscending(const Point& a, const Point& b) {
-    if (a.x != b.x) return a.x < b.x;
-    if (a.y != b.y) return a.y < b.y;
-    return a.z < b.z;
-}
-
-bool compareDescending(const Point& a, const Point& b) {
-    if (a.x != b.x) return a.x > b.x;
-    if (a.y != b.y) return a.y > b.y;
-    return a.z > b.z;
-}
-
-void print_sorted_ascending(const deque<Point>& points) {
-    deque<Point> pointss = points;
-    sort(pointss.begin(), pointss.end(), compareAscending);
-    cout << "오름차순 정렬:\n";
-    print_points(pointss);
-}
-
-void print_sorted_descending(const deque<Point>& points) {
-    deque<Point> pointss = points;
-    sort(pointss.begin(), pointss.end(), compareDescending);
-    cout << "내림차순 정렬:\n";
-    print_points(pointss);
-}
-int main() {
-    deque<Point> points;
-    string command;
-    points.push_front({ 1, 1, 0 });
-    points.push_front({ 1, 0, 0 });
-    points.push_front({ 1, 1, 1 });
+void resetGame(char board[5][5], int revealed[5][5], int* player1Attempts, int* player2Attempts, int* player1Matches, int* player2Matches, bool* joker) {
     
+    shuffleBoard(board);
 
-    while (1) {
-        cout << endl << endl;
-        print_points(points);
-        cout << "명령어 입력     " << endl << endl;
-        cin >> command;
-
-
-
-        if (command == "+") {
-            int x, y, z;
-            cin >> x >> y >> z;
-            add_point(points, x, y, z);
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            revealed[i][j] = 0;
         }
-        else if (command == "-") {
-            remove_point_front(points);
+    }
+
+    *player1Attempts = 0;
+    *player2Attempts = 0;
+    *player1Matches = 0;
+    *player2Matches = 0;
+    *joker = false;
+}
+
+int main() {
+    char board[5][5];
+    int revealed[5][5] = { 0 };
+    int player1Attempts = 0;
+    int player2Attempts = 0;
+    int player1Matches = 0;
+    int player2Matches = 0;
+    bool joker = false;
+
+    resetGame(board, revealed, &player1Attempts, &player2Attempts, &player1Matches, &player2Matches, &joker);
+
+    char col1, col2;
+    int row1, row2;
+    int currentPlayer = 1;
+
+    while (true) {
+        system("cls");
+        printBoard(board, revealed);
+
+        printf("\n");
+
+        for (int i = 0; i < 5; i++) {
+            printf("%d ", i + 1);
+            for (int j = 0; j < 5; j++) {
+                printf("%c ", board[i][j]);
+            }
+            printf("\n");
         }
-        else if (command == "q") {
+
+        printf("\n");
+
+
+        printf("플레이어 1 시도: %d, 맞춘 횟수: %d\n", player1Attempts, player1Matches);
+        printf("플레이어 2 시도: %d, 맞춘 횟수: %d\n", player2Attempts, player2Matches);
+
+        printf("명령어 입력 : ");
+        char command[10];
+        scanf("%s", command);
+
+        if (command[0] == 'r') {
+            if (command[1] == '1' || command[1] == '2') {
+                resetGame(board, revealed, &player1Attempts, &player2Attempts, &player1Matches, &player2Matches, &joker);
+                currentPlayer = 1;
+            }
+            continue;
+        }
+
+        col1 = command[0];
+        row1 = command[1] - '0';
+
+        printf("명령어 입력 : ");
+        scanf(" %c%d", &col2, &row2);
+
+        int index1_col = col1 - 'a';
+        int index1_row = row1 - 1;
+        int index2_col = col2 - 'a';
+        int index2_row = row2 - 1;
+
+        if (currentPlayer == 1) {
+            player1Attempts++;
+        }
+        else {
+            player2Attempts++;
+        }
+
+        if (board[index1_row][index1_col] == board[index2_row][index2_col]) {
+            if (currentPlayer == 1) {
+                player1Matches++;
+                revealed[index1_row][index1_col] = 1;
+                revealed[index2_row][index2_col] = 1;
+            }
+            else {
+                player2Matches++;
+                revealed[index1_row][index1_col] = 2;
+                revealed[index2_row][index2_col] = 2;
+            }
+        }
+        else {
+            printf("같지 않습니다.\n");
+
+            if (board[index1_row][index1_col] == '@' && joker == false) {
+                revealAllSameLetters(board, revealed, board[index2_row][index2_col], currentPlayer);
+                revealed[index1_row][index1_col] = 1;
+                joker = true;
+            }
+            else if (board[index2_row][index2_col] == '@' && joker == false) {
+                revealAllSameLetters(board, revealed, board[index1_row][index1_col], currentPlayer);
+                revealed[index2_row][index2_col] = 1;
+                joker = true;
+            }
+            else {
+                if (revealed[index1_row][index1_col] == 1) {
+                    revealed[index1_row][index1_col] = 1;
+                }
+                else if (revealed[index1_row][index1_col] == 2) {
+                    revealed[index1_row][index1_col] = 2;
+                }
+                else if (revealed[index2_row][index2_col] == 1) {
+                    revealed[index2_row][index2_col] = 1;
+                }
+                else if (revealed[index2_row][index2_col] == 2) {
+                    revealed[index2_row][index2_col] = 2;
+                }
+                else if (revealed[index1_row][index1_col] == 0) {
+                    revealed[index1_row][index1_col] = 0;
+                }
+                else if (revealed[index2_row][index2_col] == 0) {
+                    revealed[index2_row][index2_col] = 0;
+                }
+            }
+        }
+
+        bool allRevealed = true;
+
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (revealed[i][j] == 0) {
+                    allRevealed = false;
+                    break;
+                }
+            }
+            if (!allRevealed) break;
+        }
+
+        if (allRevealed) {
             break;
         }
-        else if (command == "d") {
-            remove_point_end(points);
-        }
-        else if (command == "e") {
-            int x, y, z;
-            cin >> x >> y >> z;
-            add_point_end(points, x, y, z);
-        }
-        else if (command == "l") {
-            print_size(points);
-        }
-        else if (command == "c") {
-            remove_all_point(points);
-        }
-        else if (command == "m") {
-            print_farthest_point(points);
-        }
-        else if (command == "n") {
-            print_closest_point(points);
-        }
-        else if (command == "a") {
-            if (as == true) {
-                print_sorted_ascending(points);
-            }
-            else  if (as == false) {
-                print_points(points);
-            }
 
-            as = !as;
-        }
-        else if (command == "s") {
-            if (as == true) {
-                print_sorted_descending(points);
-            }
-            else  if (as == false) {
-                print_points(points);
-            }
-            as = !as;
-        }
+        currentPlayer = (currentPlayer == 1) ? 2 : 1;
     }
+
     return 0;
 }
