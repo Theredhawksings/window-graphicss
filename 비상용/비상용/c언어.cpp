@@ -2,232 +2,172 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <time.h>
-#include <windows.h>
 
-void setColor(int color) {
+#define BOARD_SIZE 30
 
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(hConsole, color);
-
-}
-
-void printBoard(char board[5][5], int revealed[5][5]) {
-
-    printf("  a b c d e\n");
-
-    for (int i = 0; i < 5; i++) {
-        printf("%d ", i + 1);
-        for (int j = 0; j < 5; j++) {
-            if (revealed[i][j] != 0) {
-                int color = 7;
-                if (revealed[i][j] == 1) {
-                    color = 12;
-                }
-                else if (revealed[i][j] == 2) {
-                    color = 9;
-                }
-                setColor(color);
-                printf("%c ", board[i][j]);
-                setColor(7);
-            }
-            else {
-                printf("* ");
-            }
+void printBoard(char board[BOARD_SIZE][BOARD_SIZE]) {
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            printf("%c", board[i][j]);
         }
         printf("\n");
     }
-
 }
 
-void shuffleBoard(char board[5][5]) {
-    char characters[] = "@aabbccddeeffgghhiijjkkll";
-
-    int length = 25;
-    srand(time(0));
-
-    for (int i = 0; i < length; i++) {
-        int rando = rand() % length;
-        char temp = characters[i];
-        characters[i] = characters[rando];
-        characters[rando] = temp;
-    }
-
-    int index = 0;
-
-    for (int i = 0; i < 5; i++) {
-        for (int j = 0; j < 5; j++) {
-            board[i][j] = characters[index];
-            index++;
+void resetBoard(char board[BOARD_SIZE][BOARD_SIZE]) {
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            board[i][j] = '.';
         }
     }
-
 }
 
-void revealAllSameLetters(char board[5][5], int revealed[5][5], char letter, int currentPlayer) {
-
-    for (int i = 0; i < 5; i++) {
-        for (int j = 0; j < 5; j++) {
-            if (board[i][j] == letter) {
-                if (currentPlayer == 1) {
-                    revealed[i][j] = 1;
-                }
-                else if (currentPlayer == 2) {
-                    revealed[i][j] = 2;
-                }
+void drawRectangle(char board[BOARD_SIZE][BOARD_SIZE], int x1, int y1, int x2, int y2) {
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            int wrappedI = (j - x1 + BOARD_SIZE) % BOARD_SIZE;
+            int wrappedJ = (i - y1 + BOARD_SIZE) % BOARD_SIZE;
+            if (wrappedI <= (x2 - x1 + BOARD_SIZE) % BOARD_SIZE && wrappedJ <= (y2 - y1 + BOARD_SIZE) % BOARD_SIZE) {
+                board[i][j] = '*';
             }
         }
     }
-
 }
 
-void resetGame(char board[5][5], int revealed[5][5], int* p1attem, int* p2attem, int* p1mat, int* p2mat, bool* joker) {
+void moveX(int* x1, int* x2, int direction) {
+    *x1 = (*x1 + direction + BOARD_SIZE) % BOARD_SIZE;
+    *x2 = (*x2 + direction + BOARD_SIZE) % BOARD_SIZE;
+}
 
-    shuffleBoard(board);
+void moveY(int* y1, int* y2, int direction) {
+    *y1 = (*y1 + direction + BOARD_SIZE) % BOARD_SIZE;
+    *y2 = (*y2 + direction + BOARD_SIZE) % BOARD_SIZE;
+}
 
-    for (int i = 0; i < 5; i++) {
-        for (int j = 0; j < 5; j++) {
-            revealed[i][j] = 0;
-        }
-    }
+int calculateArea(int x1, int y1, int x2, int y2) {
+    int width = (x2 - x1 + BOARD_SIZE) % BOARD_SIZE + 1;
+    int height = (y2 - y1 + BOARD_SIZE) % BOARD_SIZE + 1;
+    return width * height;
+}
 
-    *p1attem = 0;
-    *p2attem = 0;
-    *p1mat = 0;
-    *p2mat = 0;
-    *joker = false;
+double calculateAreaRatio(int area) {
+    return (double)area / (BOARD_SIZE * BOARD_SIZE) * 100.0;
 }
 
 int main() {
-    char board[5][5];
-    int revealed[5][5] = { 0 };
-    int p1attem = 0;
-    int p2attem = 0;
-    int p1mat = 0;
-    int p2mat = 0;
-    bool joker = false;
+    char board[BOARD_SIZE][BOARD_SIZE];
+    int x1, y1, x2, y2;
+    char command;
 
-    resetGame(board, revealed, &p1attem, &p2attem, &p1mat, &p2mat, &joker);
+    resetBoard(board);
 
-    char col1, col2;
-    int row1, row2;
-    int currentPlayer = 1;
+    printf("사각형의 좌표를 입력하세요 (x1, y1) (x2, y2):\n");
+    scanf("%d %d %d %d", &x1, &y1, &x2, &y2);
 
-    while (true) {
-        system("cls");
-        printBoard(board, revealed);
+    x1 = (x1 + BOARD_SIZE) % BOARD_SIZE;
+    y1 = (y1 + BOARD_SIZE) % BOARD_SIZE;
+    x2 = (x2 + BOARD_SIZE) % BOARD_SIZE;
+    y2 = (y2 + BOARD_SIZE) % BOARD_SIZE;
 
-        printf("\n");
+    while (1) {
+      
 
-        for (int i = 0; i < 5; i++) {
-            printf("%d ", i + 1);
-            for (int j = 0; j < 5; j++) {
-                printf("%c ", board[i][j]);
-            }
-            printf("\n");
-        }
+        resetBoard(board);
+        drawRectangle(board, x1, y1, x2, y2);
+        printBoard(board);
 
-        printf("\n");
+        //printf("명령어를 입력하세요 (x/X: 우/좌, y/Y: 하/상, s/S: 축소/확대, I: x축 축소, j/J: y축 확대/축소, m: 면적 출력, n: 면적 비율 출력, a/A: x축 확대, y축 축소/반대, r: 리셋, q: 종료): ");
+        scanf(" %c", &command);
 
-
-        printf("플레이어 1 시도: %d, 맞춘 횟수: %d\n", p1attem, p1mat);
-        printf("플레이어 2 시도: %d, 맞춘 횟수: %d\n", p2attem, p2mat);
-
-        printf("명령어 입력 : ");
-        char command[10];
-        scanf("%s", command);
-
-        if (command[0] == 'r') {
-            if (command[1] == '1' || command[1] == '2') {
-                resetGame(board, revealed, &p1attem, &p2attem, &p1mat, &p2mat, &joker);
-                currentPlayer = 1;
-            }
-            continue;
-        }
-
-        col1 = command[0];
-        row1 = command[1] - '0';
-
-        printf("명령어 입력 : ");
-        scanf(" %c%d", &col2, &row2);
-
-        int i1_col = col1 - 'a';
-        int i1_row = row1 - 1;
-        int i2_col = col2 - 'a';
-        int i2_row = row2 - 1;
-
-        if (currentPlayer == 1) {
-            p1attem++;
-        }
-        else {
-            p2attem++;
-        }
-
-        if (board[i1_row][i1_col] == board[i2_row][i2_col]) {
-            if (currentPlayer == 1) {
-                p1mat++;
-                revealed[i1_row][i1_col] = 1;
-                revealed[i2_row][i2_col] = 1;
-            }
-            else {
-                p2mat++;
-                revealed[i1_row][i1_col] = 2;
-                revealed[i2_row][i2_col] = 2;
-            }
-        }
-        else {
-            printf("같지 않습니다.\n");
-
-            if (board[i1_row][i1_col] == '@' && joker == false) {
-                revealAllSameLetters(board, revealed, board[i2_row][i2_col], currentPlayer);
-                revealed[i1_row][i1_col] = 1;
-                joker = true;
-            }
-            else if (board[i2_row][i2_col] == '@' && joker == false) {
-                revealAllSameLetters(board, revealed, board[i1_row][i1_col], currentPlayer);
-                revealed[i2_row][i2_col] = 1;
-                joker = true;
-            }
-            else {
-                if (revealed[i1_row][i1_col] == 1) {
-                    revealed[i1_row][i1_col] = 1;
-                }
-                else if (revealed[i1_row][i1_col] == 2) {
-                    revealed[i1_row][i1_col] = 2;
-                }
-                else if (revealed[i2_row][i2_col] == 1) {
-                    revealed[i2_row][i2_col] = 1;
-                }
-                else if (revealed[i2_row][i2_col] == 2) {
-                    revealed[i2_row][i2_col] = 2;
-                }
-                else if (revealed[i1_row][i1_col] == 0) {
-                    revealed[i1_row][i1_col] = 0;
-                }
-                else if (revealed[i2_row][i2_col] == 0) {
-                    revealed[i2_row][i2_col] = 0;
-                }
-            }
-        }
-
-        bool allRevealed = true;
-
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                if (revealed[i][j] == 0) {
-                    allRevealed = false;
-                    break;
-                }
-            }
-            if (!allRevealed) break;
-        }
-
-        if (allRevealed) {
+        if (command == 'q') {
             break;
         }
 
-        currentPlayer = (currentPlayer == 1) ? 2 : 1;
+        switch (command) {
+        case 'x': {
+            moveX(&x1, &x2, 1);
+            break;
+        }
+        case 'X': {
+            moveX(&x1, &x2, -1);
+            break;
+        }
+        case 'y': {
+            moveY(&y1, &y2, 1);
+            break;
+        }
+        case 'Y': {
+            moveY(&y1, &y2, -1);
+            break;
+        }
+        case 's': {
+            if ((x2 - x1 + BOARD_SIZE) % BOARD_SIZE > 0) {
+                x2 = (x2 - 1 + BOARD_SIZE) % BOARD_SIZE;
+            }
+
+            if ((y2 - y1 + BOARD_SIZE) % BOARD_SIZE > 0) {
+                y2 = (y2 - 1 + BOARD_SIZE) % BOARD_SIZE;
+            }
+            break;
+        }
+        case 'S': {
+            x2 = (x2 + 1) % BOARD_SIZE;
+            y2 = (y2 + 1) % BOARD_SIZE;
+            break;
+        }
+        case 'I': {
+            if ((x2 - x1 + BOARD_SIZE) % BOARD_SIZE > 0) {
+                x2 = (x2 - 1 + BOARD_SIZE) % BOARD_SIZE;
+            }
+            break;
+        }
+        case 'j': {
+            y2 = (y2 + 1) % BOARD_SIZE;
+            break;
+        }
+        case 'J': {
+            if ((y2 - y1 + BOARD_SIZE) % BOARD_SIZE > 0) {
+                y2 = (y2 - 1 + BOARD_SIZE) % BOARD_SIZE;
+            }
+            break;
+        }
+        case 'a': {
+            x2 = (x2 + 1) % BOARD_SIZE;
+            if ((y2 - y1 + BOARD_SIZE) % BOARD_SIZE > 0) {
+                y2 = (y2 - 1 + BOARD_SIZE) % BOARD_SIZE;
+            }
+            break;
+        }
+        case 'A': {
+            if ((x2 - x1 + BOARD_SIZE) % BOARD_SIZE > 0) {
+                x2 = (x2 - 1 + BOARD_SIZE) % BOARD_SIZE;
+            }
+            y2 = (y2 + 1) % BOARD_SIZE;
+            break;
+        }
+        case 'm': {
+            int area = calculateArea(x1, y1, x2, y2);
+            printf("사각형의 면적: %d\n", area);
+            break;
+        }
+        case 'n': {
+            int area = calculateArea(x1, y1, x2, y2);
+            double ratio = calculateAreaRatio(area);
+            printf("사각형의 면적 비율: %.2f%%\n", ratio);
+            break;
+        }
+        case 'r': {
+            printf("보드를 리셋합니다.\n");
+            resetBoard(board);
+            printf("새로운 좌표를 입력하세요 (x1, y1) (x2, y2):\n");
+            scanf("%d %d %d %d", &x1, &y1, &x2, &y2);
+            x1 = (x1 + BOARD_SIZE) % BOARD_SIZE;
+            y1 = (y1 + BOARD_SIZE) % BOARD_SIZE;
+            x2 = (x2 + BOARD_SIZE) % BOARD_SIZE;
+            y2 = (y2 + BOARD_SIZE) % BOARD_SIZE;
+            break;
+        }
+        }
     }
 
     return 0;
