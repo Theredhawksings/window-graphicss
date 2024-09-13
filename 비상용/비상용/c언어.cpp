@@ -46,8 +46,46 @@ void printGrid(char grid[SIZE][SIZE], int objX, int objY) {
     }
 }
 
-bool Move(char grid[SIZE][SIZE], int x, int y) {
+bool isValidMove(char grid[SIZE][SIZE], int x, int y) {
     return (x >= 0 && x < SIZE && y >= 0 && y < SIZE && grid[x][y] == '0');
+}
+
+void moveObject(char grid[SIZE][SIZE], char direction) {
+    int dx = 0, dy = 0;
+
+    if (direction == 'W' || direction == 'w') {
+        dx = -1;  // Move up
+    }
+    else if (direction == 'S' || direction == 's') {
+        dx = 1;   // Move down
+    }
+    else if (direction == 'A' || direction == 'a') {
+        dy = -1;  // Move left
+    }
+    else if (direction == 'D' || direction == 'd') {
+        dy = 1;   // Move right
+    }
+
+    while (1) {
+        int newX = objX + dx;
+        int newY = objY + dy;
+
+        if (newX < 0 || newX >= SIZE || newY < 0 || newY >= SIZE || grid[newX][newY] == '1') {
+            // Stop if we hit the boundary or a '1'
+            break;
+        }
+
+        if (grid[newX][newY] == 'X') {
+            // Reverse direction if we hit an 'X'
+            dx = -dx;
+            dy = -dy;
+        }
+
+        objX = newX;
+        objY = newY;
+
+        printGrid(grid, objX, objY);
+    }
 }
 
 int main() {
@@ -68,31 +106,13 @@ int main() {
             pathOX = true;
         }
 
-        else if (command == 'R' || command == 'r') {
+        if (command == 'R' || command == 'r') {
             mal = true;
             objX = 0;
             objY = 0;
         }
-
-        else if (command == 'W' || command == 'w') {
-            if (Move(grid, objX - 1, objY)) {
-                objX--;
-            }
-        }
-        else if (command == 'S' || command == 's') {
-            if (Move(grid, objX + 1, objY)) {
-                objX++;
-            }
-        }
-        else if (command == 'A' || command == 'a') {
-            if (Move(grid, objX, objY - 1)) {
-                objY--;
-            }
-        }
-        else if (command == 'D' || command == 'd') {
-            if (Move(grid, objX, objY + 1)) {
-                objY++;
-            }
+        else if (command == 'W' || command == 'w' || command == 'A' || command == 'a' || command == 'S' || command == 's' || command == 'D' || command == 'd') {
+            moveObject(grid, command);
         }
         else if (command == 'Q' || command == 'q') {
             break;
