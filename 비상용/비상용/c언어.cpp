@@ -54,16 +54,16 @@ void moveObject(char grid[SIZE][SIZE], char direction) {
     int dx = 0, dy = 0;
 
     if (direction == 'W' || direction == 'w') {
-        dx = -1;  // Move up
+        dx = -1; 
     }
     else if (direction == 'S' || direction == 's') {
-        dx = 1;   // Move down
+        dx = 1;   
     }
     else if (direction == 'A' || direction == 'a') {
-        dy = -1;  // Move left
+        dy = -1; 
     }
     else if (direction == 'D' || direction == 'd') {
-        dy = 1;   // Move right
+        dy = 1;   
     }
 
     while (1) {
@@ -71,12 +71,10 @@ void moveObject(char grid[SIZE][SIZE], char direction) {
         int newY = objY + dy;
 
         if (newX < 0 || newX >= SIZE || newY < 0 || newY >= SIZE || grid[newX][newY] == '1') {
-            // Stop if we hit the boundary or a '1'
             break;
         }
 
         if (grid[newX][newY] == 'X') {
-            // Reverse direction if we hit an 'X'
             dx = -dx;
             dy = -dy;
         }
@@ -85,6 +83,10 @@ void moveObject(char grid[SIZE][SIZE], char direction) {
         objY = newY;
 
         printGrid(grid, objX, objY);
+    }
+
+    if (objX == SIZE - 1 && objY == SIZE - 1) {
+        exit(0);  
     }
 }
 
