@@ -2,178 +2,197 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
+#include <stdbool.h>
+#include <time.h>
 
-#define BOARD 30
+#define SIZE 30
 
-#define COLOR_GREEN  10
-#define COLOR_YELLOW 14
-#define COLOR_RED    12
-#define COLOR_WHITE  15
+bool pathOX = false;
+bool mal = false;
+int objX = 0, objY = 0;
+int dx = 0, dy = 0;
+int num = 0;
 
-void setColor(int color) {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+#define RED "\x1b[31m"
+#define RESET "\x1b[0m"
+
+void generateRandomGrid(char grid[SIZE][SIZE]) {
+    srand((unsigned)time(NULL));
+
+    for (int i = 0; i < SIZE; ++i) {
+        for (int j = 0; j < SIZE; ++j) {
+            grid[i][j] = '1';  
+        }
+    }
+
+    int pathLength = (SIZE * SIZE) / 2 + 70;
+    int pathCount = 0;
+
+    while (pathCount < pathLength) {
+        int x = rand() % SIZE;
+        int y = rand() % SIZE;
+
+        if (grid[x][y] == '1') {  
+            grid[x][y] = '0';  
+            pathCount++;
+        }
+    }
+
+    int obstacles = 0;
+    while (obstacles < 30) {
+        int x = rand() % SIZE;
+        int y = rand() % SIZE;
+
+        if (grid[x][y] == '1') {  
+            grid[x][y] = 'X';
+            obstacles++;
+        }
+    }
+
+    grid[0][0] = '0';  
+    grid[SIZE - 1][SIZE - 1] = '0'; 
 }
 
-void printBoard(char board[BOARD][BOARD]) {
-    for (int i = 0; i < BOARD; i++) {
-        for (int j = 0; j < BOARD; j++) {
-            switch (board[i][j]) {
-            case '#':
-                setColor(COLOR_RED);
-                break;
-            default:
-                setColor(COLOR_WHITE);
+void readPathFromFile(char grid[SIZE][SIZE]) {
+    FILE* file = NULL;
+
+    if (num == 0) {
+        file = fopen("path.txt", "r");
+    }
+
+    if (num == 1) {
+        file = fopen("path1.txt", "r");
+    }
+
+
+    for (int i = 0; i < SIZE; ++i) {
+        for (int j = 0; j < SIZE; ++j) {
+            char ch = fgetc(file);
+            if (ch == ' ') {
+                j--;
+                continue;
             }
-            printf("%c", board[i][j]);
+            grid[i][j] = ch;
+        }
+        fgetc(file);  
+    }
+    fclose(file);
+}
+
+void printGrid(char grid[SIZE][SIZE], int objX, int objY) {
+    for (int i = 0; i < SIZE; ++i) {
+        for (int j = 0; j < SIZE; ++j) {
+            if (i == objX && j == objY && mal == true) {
+                printf(RED "# " RESET);
+            }
+            else {
+                printf("%c ", grid[i][j]);
+            }
         }
         printf("\n");
     }
-    setColor(COLOR_WHITE); 
 }
 
-void resetBoard(char board[BOARD][BOARD]) {
-    for (int i = 0; i < BOARD; i++) {
-        for (int j = 0; j < BOARD; j++) {
-            board[i][j] = '.';
-        }
+bool Move(char grid[SIZE][SIZE], int x, int y) {
+    return (x >= 0 && x < SIZE && y >= 0 && y < SIZE && grid[x][y] == '0');
+}
+
+void reverseDirection() {
+    if (dx != 0) {
+        dx = -dx;
     }
-}
-
-void drawRectangle(char board[BOARD][BOARD], int x1, int y1, int x2, int y2, char symbol) {
-    for (int i = 0; i < BOARD; i++) {
-        for (int j = 0; j < BOARD; j++) {
-            int wrappedI = (j - x1 + BOARD) % BOARD;
-            int wrappedJ = (i - y1 + BOARD) % BOARD;
-            if (wrappedI <= (x2 - x1 + BOARD) % BOARD && wrappedJ <= (y2 - y1 + BOARD) % BOARD) {
-                if (board[i][j] != '.' && board[i][j] != symbol) {
-                    board[i][j] = '#'; 
-                }
-                else {
-                    board[i][j] = symbol;
-                }
-            }
-        }
+    if (dy != 0) {
+        dy = -dy;
     }
-}
-
-void moveX(int* x1, int* x2, int direction) {
-    *x1 = (*x1 + direction + BOARD) % BOARD;
-    *x2 = (*x2 + direction + BOARD) % BOARD;
-}
-
-void moveY(int* y1, int* y2, int direction) {
-    *y1 = (*y1 + direction + BOARD) % BOARD;
-    *y2 = (*y2 + direction + BOARD) % BOARD;
-}
-
-void resizeRectangle(int* x1, int* y1, int* x2, int* y2, int direction) {
-    if (direction > 0) { 
-        *x2 = (*x2 + 1) % BOARD;
-        *y2 = (*y2 + 1) % BOARD;
-    }
-    else if (direction < 0) { 
-        if ((*x2 - *x1 + BOARD) % BOARD > 0) {
-            *x2 = (*x2 - 1 + BOARD) % BOARD;
-        }
-        if ((*y2 - *y1 + BOARD) % BOARD > 0) {
-            *y2 = (*y2 - 1 + BOARD) % BOARD;
-        }
-    }
+    objX += dx;
+    objY += dy;
 }
 
 int main() {
-    char board[BOARD][BOARD];
-    int x1_1, y1_1, x2_1, y2_1; 
-    int x1_2, y1_2, x2_2, y2_2;
+    char grid[SIZE][SIZE];
     char command;
 
-    resetBoard(board);
-
-    printf("첫 번째 사각형의 좌표를 입력하세요 (x1, y1) (x2, y2):\n");
-    scanf("%d %d %d %d", &x1_1, &y1_1, &x2_1, &y2_1);
-
-    printf("두 번째 사각형의 좌표를 입력하세요 (x1, y1) (x2, y2):\n");
-    scanf("%d %d %d %d", &x1_2, &y1_2, &x2_2, &y2_2);
-
-    x1_1 = (x1_1 + BOARD) % BOARD;
-    y1_1 = (y1_1 + BOARD) % BOARD;
-    x2_1 = (x2_1 + BOARD) % BOARD;
-    y2_1 = (y2_1 + BOARD) % BOARD;
-
-    x1_2 = (x1_2 + BOARD) % BOARD;
-    y1_2 = (y1_2 + BOARD) % BOARD;
-    x2_2 = (x2_2 + BOARD) % BOARD;
-    y2_2 = (y2_2 + BOARD) % BOARD;
+    //generateRandomGrid(grid);  
+    readPathFromFile(grid);
 
     while (1) {
-        resetBoard(board);
-        drawRectangle(board, x1_1, y1_1, x2_1, y2_1, '*');
-        drawRectangle(board, x1_2, y1_2, x2_2, y2_2, '+');
-        printBoard(board);
+        if (pathOX) {
+            system("cls");
+            printGrid(grid, objX, objY);
+        }
 
-        printf("명령어를 입력하세요: ");
         scanf(" %c", &command);
 
-        if (command == 'q') {
-            break;
+        if (command == 't') {
+            pathOX = true;
         }
 
-        switch (command) {
-        case 'x':
-            moveX(&x1_1, &x2_1, 1);
-            break;
-        case 'X':
-            moveX(&x1_1, &x2_1, -1);
-            break;
-        case 'y':
-            moveY(&y1_1, &y2_1, 1);
-            break;
-        case 'Y':
-            moveY(&y1_1, &y2_1, -1);
-            break;
-        case 's':
-            resizeRectangle(&x1_1, &y1_1, &x2_1, &y2_1, -1);
-            break;
-        case 'S':
-            resizeRectangle(&x1_1, &y1_1, &x2_1, &y2_1, 1);
-            break;
-        case 'w':
-            moveX(&x1_2, &x2_2, 1);
-            break;
-        case 'W':
-            moveX(&x1_2, &x2_2, -1);
-            break;
-        case 'a':
-            moveY(&y1_2, &y2_2, 1);
-            break;
-        case 'A':
-            moveY(&y1_2, &y2_2, -1);
-            break;
-        case 'd':
-            resizeRectangle(&x1_2, &y1_2, &x2_2, &y2_2, -1);
-            break;
-        case 'D':
-            resizeRectangle(&x1_2, &y1_2, &x2_2, &y2_2, 1);
-            break;
-        case 'r':
-            printf("보드를 리셋합니다.\n");
-            resetBoard(board);
-            printf("첫 번째 사각형의 새로운 좌표를 입력하세요 (x1, y1) (x2, y2):\n");
-            scanf("%d %d %d %d", &x1_1, &y1_1, &x2_1, &y2_1);
-            printf("두 번째 사각형의 새로운 좌표를 입력하세요 (x1, y1) (x2, y2):\n");
-            scanf("%d %d %d %d", &x1_2, &y1_2, &x2_2, &y2_2);
-            x1_1 = (x1_1 + BOARD) % BOARD;
-            y1_1 = (y1_1 + BOARD) % BOARD;
-            x2_1 = (x2_1 + BOARD) % BOARD;
-            y2_1 = (y2_1 + BOARD) % BOARD;
-            x1_2 = (x1_2 + BOARD) % BOARD;
-            y1_2 = (y1_2 + BOARD) % BOARD;
-            x2_2 = (x2_2 + BOARD) % BOARD;
-            y2_2 = (y2_2 + BOARD) % BOARD;
-            break;
+        else if (command == 'R' || command == 'r') {
+            mal = true;
+            objX = 0;
+            objY = 0;
+            dx = 0;
+            dy = 0;
         }
-    }
+
+        else if (command == 'W' || command == 'w') {
+            dx = -1;
+            dy = 0;
+            if (Move(grid, objX - 1, objY)) {
+                objX--;
+            }
+            else if (grid[objX - 1][objY] == 'X') {
+                reverseDirection();
+            }
+        }
+
+        else if (command == 'S' || command == 's') {
+            dx = 1;
+            dy = 0;
+            if (Move(grid, objX + 1, objY)) {
+                objX++;
+            }
+            else if (grid[objX + 1][objY] == 'X') {
+                reverseDirection();
+            }
+        }
+
+        else if (command == 'A' || command == 'a') {
+            dx = 0;
+            dy = -1;
+            if (Move(grid, objX, objY - 1)) {
+                objY--;
+            }
+            else if (grid[objX][objY - 1] == 'X') {
+                reverseDirection();
+            }
+        }
+
+        else if (command == 'D' || command == 'd') {
+                dx = 0;
+                dy = 1;
+                if (Move(grid, objX, objY + 1)) {
+                    objY++;
+                }
+                else if (grid[objX][objY + 1] == 'X') {
+                    reverseDirection();
+                }
+            }
+
+        else if (command == 'Q' || command == 'q') {
+                break;
+            }
+
+        else if (command == 'u' || command == 'U') {
+            //generateRandomGrid(grid);
+            objX = 0, objY = 0;
+            num++;
+            readPathFromFile(grid);
+        }
+
+        }
+
+    
 
     return 0;
 }
